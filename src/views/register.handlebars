@@ -1,0 +1,29 @@
+<div class="formContainer">
+    <div class="accessForm">
+        <h2 class="registerContainer">Registro</h2>
+        <form id="accessForm">
+            <div class="userContainer">
+                <div class="nameContainer">
+                    <label for="first_name">Nombre</label>
+                    <input name="first_name" placeholder="Juan" {{required}} />
+                </div>
+                <div class="ltNameContainer">
+                    <label for="last_name">Apellido</label>
+                    <input name="last_name" placeholder="Rodriguez" {{required}} />
+                </div>
+                <div class="ageContainer">
+                    <label for="age">Edad</label>
+                    <input name="age" type="number" min="1" max="105" placeholder="35" {{required}} />
+                </div>
+            </div>
+            <label for="email">Email</label>
+            <input name="email" placeholder="example@gmail.com" {{required}} />
+            <label for="password">Contraseña</label>
+            <input name="password" type="password" placeholder="Contraseña" {{required}} />
+            <input class="loginBtn" type="submit" value="Registrar" {{required}} />
+        </form>
+        <p>¿Ya tienes una Cuenta? <a href="/login">Login</a></p>
+    </div>
+</div>
+
+<script src="/js/register.js"></script>
