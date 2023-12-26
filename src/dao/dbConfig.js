@@ -1,6 +1,7 @@
 import mongoose from "mongoose"
+import config from "../config/config.js"
 
-const URI = 'mongodb+srv://MatiasGiachello:<Maichelo2004>@cluster0.ehcov7r.mongodb.net/?retryWrites=true&w=majority'
+const URI = config.mongoUrl
 
 await mongoose.connect(URI, {
     useNewUrlParser: true,

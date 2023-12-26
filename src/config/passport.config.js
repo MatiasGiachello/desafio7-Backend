@@ -6,6 +6,9 @@ import gitHubStrategy from "passport-github2";
 import mongoose from "mongoose";
 import config from "./config.js";
 import GoogleStrategy from "passport-google-oauth20";
+import CustomError from '../services/errors/CustomError.js'
+import EErrors from "../services/errors/enums.js"
+import { registerUserErrorInfo, loginUserErrorInfo } from "../services/errors/info.js"
 
 const LocalStrategy = local.Strategy;
 const GitHubStrategy = gitHubStrategy.Strategy;
@@ -15,6 +18,14 @@ export const initializePassport = () => {
         const { first_name, last_name, email, age } = req.body;
         try {
             const exists = await userModel.findOne({ email });
+            if (!first_name || !last_name || !email || !age || !password) {
+                CustomError.createError({
+                    name: "Error al Crear el Usuario",
+                    cause: registerUserErrorInfo({ first_name, last_name, email, age, password }),
+                    message: "Se ha encontrado un error al crear el usuario",
+                    code: EErrors.INVALID_TYPES_ERROR
+                })
+            }
             if (exists) {
                 console.log('El usuario ya existe')
                 return done(null, false);
@@ -27,6 +38,7 @@ export const initializePassport = () => {
                 password: createHash(password),
                 cart: new mongoose.Types.ObjectId()
             };
+
             let result = await userModel.create(newUser);
             return done(null, result)
         } catch (error) {
@@ -37,6 +49,14 @@ export const initializePassport = () => {
     passport.use('login', new LocalStrategy({ usernameField: 'email' }, async (username, password, done) => {
         try {
             const user = await userModel.findOne({ email: username });
+            if (!username || !password) {
+                CustomError.createError({
+                    name: "Error al Iniciar Sesión",
+                    cause: loginUserErrorInfo({ username, password }),
+                    message: "Se ha encontrado un error al iniciar la sesión",
+                    code: EErrors.INVALID_TYPES_ERROR
+                })
+            }
             if (!user) {
                 console.log("No existe el usuario")
                 return done(null, false);

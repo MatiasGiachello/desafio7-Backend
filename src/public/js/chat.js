@@ -4,26 +4,26 @@ const formulario = document.getElementById("formulario")
 const inputmensaje = document.getElementById("mensaje")
 const chat = document.getElementById("chat")
 
-let usuario = null
-
-if (!usuario) {
-    Swal.fire({
-        title: "¿Cómo te Llamas?",
-        text: "Ingresa tu Nombre de Usuario",
-        input: "text",
-        inputValidator: (value) => {
-            if (!value) {
-                return "Necesitas ingresar tu Nombre"
-            }
-        },
-        allowOutsideClick: false
-    })
-        .then(username => {
-            usuario = username.value
-            nombreUsuario.innerHTML = usuario
-            socketClient.emit("nuevoUsuario", usuario)
-        })
-}
+let usuario = nombreUsuario.textContent
+socketClient.emit("nuevoUsuario", usuario)
+// if (!usuario) {
+//     Swal.fire({
+//         title: "¿Cómo te Llamas?",
+//         text: "Ingresa tu Nombre de Usuario",
+//         input: "text",
+//         inputValidator: (value) => {
+//             if (!value) {
+//                 return "Necesitas ingresar tu Nombre"
+//             }
+//         },
+//         allowOutsideClick: false
+//     })
+//         .then(username => {
+//             usuario = username.value
+//             nombreUsuario.innerHTML = usuario
+//             socketClient.emit("nuevoUsuario", usuario)
+//         })
+// }
 
 formulario.onsubmit = (e) => {
     e.preventDefault()
@@ -31,7 +31,6 @@ formulario.onsubmit = (e) => {
         user: usuario,
         message: inputmensaje.value
     }
-    console.log(info)
     socketClient.emit("message", info)
     inputmensaje.value = " "
 
@@ -45,6 +44,7 @@ socketClient.on("chat", mensaje => {
 })
 
 socketClient.on("broadcast", usuario => {
+    console.log("hola")
     Swal.fire({
         toast: true,
         position: "top-right",

@@ -2,6 +2,13 @@ import { Router } from "express"
 import CartManager from "../dao/managers/cartManagerMongo.js"
 import ProductManager from "../dao/managers/productManagerMongo.js"
 import { __dirname } from "../utils.js"
+import { ticketsModel } from "../dao/models/tickets.js"
+import { v4 as uuidv4 } from 'uuid';
+import { checkRole } from "../middlewares/auth.js"
+
+import CustomError from '../services/errors/CustomError.js'
+import EErrors from "../services/errors/enums.js"
+import { addCartErrorInfo, addProdInCartErrorInfo } from "../services/errors/info.js"
 
 const cManager = new CartManager()
 const pManager = new ProductManager()
@@ -19,9 +26,17 @@ router.get("/:cid", async (req, res) => {
 });
 
 
-router.post('/', async (req, res) => {
+router.post('/', checkRole("user"), async (req, res) => {
     try {
         const obj = req.body;
+        if (!obj) {
+            CustomError.createError({
+                name: "Error al Crear el Carrito",
+                cause: addCartErrorInfo({ obj }),
+                message: "Se ha encontrado un error al crear el Carrito",
+                code: EErrors.INVALID_TYPES_ERROR
+            })
+        }
         if (!Array.isArray(obj)) {
             return res.status(400).send('Invalid request: products must be an array');
         }
@@ -44,11 +59,19 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.post("/:cid/products/:pid", async (req, res) => {
+router.post("/:cid/products/:pid", checkRole("user"), async (req, res) => {
     const { cid, pid } = req.params;
     const { quantity } = req.body;
 
     try {
+        if (!cid || !pid || !quantity) {
+            CustomError.createError({
+                name: "Error al Agregar el Producto en el Carrito",
+                cause: addProdInCartErrorInfo({ cid, pid, quantity }),
+                message: "Se ha encontrado un agregar el Producto el Carrito",
+                code: EErrors.INVALID_TYPES_ERROR
+            })
+        }
         const checkIdProduct = await pManager.getProductById(pid);
         if (!checkIdProduct) {
             return res.status(404).send({ message: `Product with ID: ${pid} not found` });
@@ -179,5 +202,52 @@ router.delete('/:cid', async (req, res) => {
         return res.status(500).send({ message: 'An error occurred while processing the request' });
     }
 });
+
+router.post('/:cid/purchase', async (req, res) => {
+    try {
+        const cartId = req.params.cid;
+        const cart = await cManager.getCartById(cartId);
+
+        if (cart) {
+            if (!cart.products.length) {
+                return res.send("Es necesario que Agregue Productos al Carrito para Realizar la Compra")
+            }
+
+            const ticketProducts = []
+            const rejectedProducts = []
+            let amount = 0
+
+            for (let i = 0; i < cart.products.length; i++) {
+                const cartProduct = cart.products[i];
+                const productDb = await pManager.getProductById(cartProduct._id._id);
+                amount += productDb.price
+                let stock = productDb.stock
+                stock -= cartProduct.quantity
+                if (cartProduct.quantity <= productDb.stock) {
+                    ticketProducts.push(cartProduct)
+                    pManager.updateProductStock(cartProduct._id._id, stock)
+                } else {
+                    rejectedProducts.push(cartProduct)
+                    return res.send('No hay Suficiente Stock')
+                }
+            }
+
+            const newTicket = {
+                code: uuidv4(),
+                purchase_datetime: new Date(),
+                amount: amount,
+                purchaser: req.user.email
+            }
+
+            const ticketCreated = await ticketsModel.create(newTicket)
+            res.send(ticketCreated)
+        } else {
+            res.send("El carrito no existe")
+        }
+
+    } catch (error) {
+        res.send(error.message)
+    }
+})
 
 export default router

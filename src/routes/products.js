@@ -1,6 +1,10 @@
 import { Router } from "express";
 import ProductManager from "../dao/managers/productManagerMongo.js";
+import { checkRole } from "../middlewares/auth.js";
 
+import CustomError from '../services/errors/CustomError.js'
+import EErrors from "../services/errors/enums.js"
+import { newProductErrorInfo, deleteProductErrorInfo, editProductErrorInfo } from "../services/errors/info.js"
 const router = Router()
 const pManager = new ProductManager()
 
@@ -20,21 +24,46 @@ router.get('/:pId', async (req, res) => {
     res.send({ status: 'success', productFind })
 })
 
-router.post("/", async (req, res) => {
-    const product = req.body
+router.post("/", checkRole("admin"), async (req, res) => {
+    const { title, description, price, category, code, stock } = req.body
+    const product = { title, description, price, category, code, stock }
+    if (!title || !description || !price || !category || !code || !stock) {
+        CustomError.createError({
+            name: "Error al Crear el Producto",
+            cause: newProductErrorInfo({ title, description, price, category, code, stock }),
+            message: "Se ha encontrado un error al crear el producto",
+            code: EErrors.INVALID_TYPES_ERROR
+        })
+    }
     const newProduct = await pManager.addProduct(product)
     res.send({ status: 'sucess', newProduct })
 })
 
-router.put('/:pId', async (req, res) => {
+router.put('/:pId', checkRole("admin"), async (req, res) => {
     const newData = req.body
     const idProduct = req.params.pId
+    if (!newData || !idProduct) {
+        CustomError.createError({
+            name: "Error al Editar el Producto",
+            cause: editProductErrorInfo({ idProduct, newData }),
+            message: "Se ha encontrado un error al editar el producto",
+            code: EErrors.INVALID_TYPES_ERROR
+        })
+    }
     const updatedProduct = await pManager.updateProduct(idProduct, newData)
     res.send({ status: 'sucess', updatedProduct })
 })
 
-router.delete('/:pId', async (req, res) => {
+router.delete('/:pId', checkRole("admin"), async (req, res) => {
     const idProduct = req.params.pId
+    if (!idProduct) {
+        CustomError.createError({
+            name: "Error al Eliminar el Producto",
+            cause: deleteProductErrorInfo({ idProduct }),
+            message: "Se ha encontrado un error al eliminar el producto",
+            code: EErrors.INVALID_TYPES_ERROR
+        })
+    }
     const deletedProduct = await pManager.deleteProduct(idProduct)
     res.send({ status: 'sucess', deletedProduct })
 })

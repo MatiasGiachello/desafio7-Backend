@@ -1,6 +1,5 @@
 const socket = io();
 socket.on("productos", (products) => {
-    console.log(products);
     updateProductList(products);
 });
 

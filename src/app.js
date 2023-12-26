@@ -23,8 +23,12 @@ import cartRouter from './routes/cart.js'
 import viewRouter from './routes/view.js'
 import sessionRouter from './routes/sessions.js'
 
+import { checkRole } from './middlewares/auth.js'
+import { errorHandler } from './middlewares/error.js'
+
 const app = express()
 app.use(express.json())
+app.use(errorHandler)
 app.use(express.urlencoded({ extended: true }))
 const PORT = process.env.PORT || 8080;
 
@@ -87,7 +91,6 @@ socketServer.on('connection', async socket => {
         console.log("Usuario desconectado", socket.id)
     })
     socket.on("message", async (info) => {
-        console.log(info)
         await msgMaganer.createMessage(info)
         socketServer.emit("chat", await msgMaganer.getMessages())
     })

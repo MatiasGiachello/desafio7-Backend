@@ -5,27 +5,14 @@ import CartManager from "../dao/managers/cartManagerMongo.js";
 const router = Router()
 const pManager = new ProductManager()
 const cManager = new CartManager()
-
-const publicAccess = (req, res, next) => {
-    next();
-}
-const privateAccess = (req, res, next) => {
-    if (!req.session.user) return res.redirect('/login')
-    next()
-}
-const adminAccess = (req, res, next) => {
-    if (req.session.user && req.session.user.role === 'admin') {
-        next();
-    } else {
-        res.redirect('/profile');
-    }
-}
+import { checkRole, sessionAccess, publicAccess } from "../middlewares/auth.js";
+import { generateProducts } from "../utils.js";
 
 router.get('/', publicAccess, (req, res) => {
     res.render("home", { title: "Lans - Home", isHomePage: true })
 })
 
-router.get('/products', privateAccess, async (req, res) => {
+router.get('/products', checkRole("user"), async (req, res) => {
     const {
         limit = 10,
         page = 1,
@@ -82,17 +69,17 @@ router.get('/products', privateAccess, async (req, res) => {
     }
 })
 
-router.get('/carts/:cid', privateAccess, async (req, res) => {
+router.get('/carts/:cid', checkRole("user"), async (req, res) => {
     const cart = await cManager.getCartById(req.params.cid)
     res.render("cart", { cart, title: "Lans - Carrito" })
 })
 
-router.get('/realtimeproducts', adminAccess, (req, res) => {
+router.get('/realtimeproducts', checkRole("admin"), (req, res) => {
     res.render("realTimeProducts", { title: "Lans - Admin Productos" })
 })
 
-router.get('/chat', (req, res) => {
-    res.render("chat", { title: "Lans - Chat" })
+router.get('/chat', checkRole("user"), (req, res) => {
+    res.render("chat", { title: "Lans - Chat", user: req.session.user.name })
 })
 
 //SESSION
@@ -104,10 +91,20 @@ router.get('/register', publicAccess, (req, res) => {
     res.render('register', { required: 'required', title: 'Lans - Registro' })
 })
 
-router.get('/profile', privateAccess, (req, res) => {
+router.get('/profile', sessionAccess, (req, res) => {
     res.render('profile', {
         user: req.session.user,
         title: 'Lans - Perfil'
     })
+})
+
+router.get('/mockingproducts', (req, res) => {
+    let products = []
+    let id = 0
+    for (let i = 0; i < 100; i++) {
+        id++
+        products.push(generateProducts(id))
+    }
+    res.send(products)
 })
 export default router
