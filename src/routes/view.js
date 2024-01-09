@@ -7,12 +7,14 @@ const pManager = new ProductManager()
 const cManager = new CartManager()
 import { checkRole, sessionAccess, publicAccess } from "../middlewares/auth.js";
 import { generateProducts } from "../utils.js";
+import { addLogger } from "../utils/logger.js"
+
 
 router.get('/', publicAccess, (req, res) => {
     res.render("home", { title: "Lans - Home", isHomePage: true })
 })
 
-router.get('/products', checkRole("user"), async (req, res) => {
+router.get('/products', sessionAccess, async (req, res) => {
     const {
         limit = 10,
         page = 1,
@@ -65,7 +67,7 @@ router.get('/products', checkRole("user"), async (req, res) => {
         const { hasPrevPage, hasNextPage, page, prevLink, nextLink } = info
         res.render("products", { listProducts, hasPrevPage, hasNextPage, page, prevLink, nextLink, user: req.session.user, title: "Lans - Productos" })
     } catch (error) {
-        console.log(error)
+        req.logger.error(error)
     }
 })
 

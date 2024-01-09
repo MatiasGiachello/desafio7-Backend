@@ -9,6 +9,7 @@ import { checkRole } from "../middlewares/auth.js"
 import CustomError from '../services/errors/CustomError.js'
 import EErrors from "../services/errors/enums.js"
 import { addCartErrorInfo, addProdInCartErrorInfo } from "../services/errors/info.js"
+import { addLogger } from "../utils/logger.js"
 
 const cManager = new CartManager()
 const pManager = new ProductManager()
@@ -54,7 +55,7 @@ router.post('/', checkRole("user"), async (req, res) => {
         res.status(200).send(cart);
 
     } catch (err) {
-        console.log(err);
+        req.logger.error(err);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -83,13 +84,13 @@ router.post("/:cid/products/:pid", checkRole("user"), async (req, res) => {
         }
 
         const result = await cManager.addProductInCart(cid, { _id: pid, quantity: quantity });
-        console.log(result);
+        req.logger.info(result);
         return res.status(200).send({
             message: `Product with ID: ${pid} added to cart with ID: ${cid}`,
             cart: result,
         });
     } catch (error) {
-        console.error("Error occurred:", error);
+        req.logger.error(error);
         return res.status(500).send({ message: "An error occurred while processing the request" });
     }
 });
@@ -115,7 +116,7 @@ router.put('/:cid', async (req, res) => {
         const cart = await cManager.updateOneProduct(cid, products);
         return res.status(200).send({ status: 'success', payload: cart });
     } catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ status: 'error', message: 'An error occurred while processing the request' });
     }
 });
@@ -138,7 +139,7 @@ router.put('/:cid/products/:pid', async (req, res) => {
         return res.status(200).send({ status: 'success', message: `Cantidad del Producto actualizado a ${quantity}` });
     }
     catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ status: 'error', message: 'An error occurred while processing the request' });
 
     }
@@ -169,7 +170,7 @@ router.delete('/:cid/products/:pid', async (req, res) => {
 
         return res.status(200).send({ status: 'success', message: `Deleted product with ID: ${pid}`, cart: updatedCart });
     } catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ status: 'error', message: 'An error occurred while processing the request' });
     }
 });
@@ -198,7 +199,7 @@ router.delete('/:cid', async (req, res) => {
             cart: cart,
         });
     } catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ message: 'An error occurred while processing the request' });
     }
 });

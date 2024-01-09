@@ -75,6 +75,15 @@ export default class ProductManager {
         }
     }
 
+    updateProductStock = async (id, newStock) => {
+        try {
+            await productsModel.updateOne({ _id: id }, { $set: { stock: newStock } });
+            return productsModel.findOne({ _id: id });
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     deleteProduct = async (id) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return `El producto con el ID: ${id} no fue encontrado`;
