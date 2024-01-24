@@ -2,8 +2,6 @@ import { Router } from "express";
 import { userModel } from "../dao/models/user.js";
 import { createHash, isValidPassword } from "../utils.js";
 import passport from "passport";
-import { addLogger } from "../utils/logger.js"
-
 
 const router = Router();
 
@@ -39,7 +37,7 @@ router.post('/register', passport.authenticate('register', { failureRedirect: '/
     res.send({ status: "success", message: "Usuario Registrado" })
 })
 router.get('/failregister', (req, res) => {
-    req.logger.warn("Error al Registrarse")
+    console.log("Error al Registrarse")
     res.send({ status: "error", message: "Error al registrar" })
 })
 
@@ -68,7 +66,7 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
 router.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            req.logger.warn(`Error al cerrar sesión ${err}`)
+            console.error("Error al cerrar sesión:", err);
             res.status(500).send({ status: "error", error: "Error al cerrar sesión" });
         } else {
             res.redirect('/login');

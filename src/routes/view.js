@@ -6,15 +6,12 @@ const router = Router()
 const pManager = new ProductManager()
 const cManager = new CartManager()
 import { checkRole, sessionAccess, publicAccess } from "../middlewares/auth.js";
-import { generateProducts } from "../utils.js";
-import { addLogger } from "../utils/logger.js"
-
 
 router.get('/', publicAccess, (req, res) => {
     res.render("home", { title: "Lans - Home", isHomePage: true })
 })
 
-router.get('/products', sessionAccess, async (req, res) => {
+router.get('/products', checkRole("user"), async (req, res) => {
     const {
         limit = 10,
         page = 1,
@@ -67,7 +64,7 @@ router.get('/products', sessionAccess, async (req, res) => {
         const { hasPrevPage, hasNextPage, page, prevLink, nextLink } = info
         res.render("products", { listProducts, hasPrevPage, hasNextPage, page, prevLink, nextLink, user: req.session.user, title: "Lans - Productos" })
     } catch (error) {
-        req.logger.error(error)
+        console.log(error)
     }
 })
 
@@ -98,15 +95,5 @@ router.get('/profile', sessionAccess, (req, res) => {
         user: req.session.user,
         title: 'Lans - Perfil'
     })
-})
-
-router.get('/mockingproducts', (req, res) => {
-    let products = []
-    let id = 0
-    for (let i = 0; i < 100; i++) {
-        id++
-        products.push(generateProducts(id))
-    }
-    res.send(products)
 })
 export default router
