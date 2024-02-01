@@ -22,10 +22,18 @@ import productsRouter from './routes/products.js'
 import cartRouter from './routes/cart.js'
 import viewRouter from './routes/view.js'
 import sessionRouter from './routes/sessions.js'
+import userRouter from './routes/user.js'
+
 import { checkRole } from './middlewares/auth.js'
+import { errorHandler } from './middlewares/error.js'
+import { addLogger } from './utils/logger.js'
+import swaggerJSDoc from 'swagger-jsdoc'
+import swaggerUiExpress from 'swagger-ui-express'
 
 const app = express()
 app.use(express.json())
+app.use(errorHandler)
+app.use(addLogger)
 app.use(express.urlencoded({ extended: true }))
 const PORT = process.env.PORT || 8080;
 
@@ -52,8 +60,31 @@ app.use(express.static(__dirname + '/public'));
 app.use('/api/products', productsRouter)
 app.use('/api/carts', cartRouter)
 app.use('/api/sessions', sessionRouter)
+app.use('/api/users', userRouter)
 app.use('/', viewRouter)
 
+const swaggerOptions = {
+    definition: {
+        openapi: "3.0.1",
+        info: {
+            title: "Documentación de Lans Accesorios",
+            description: "API para el Ecommerce Lans"
+        }
+    },
+    apis: [`${__dirname}/docs/**/*.yaml`]
+}
+const specs = swaggerJSDoc(swaggerOptions)
+app.use('/api/docs', swaggerUiExpress.serve, swaggerUiExpress.setup(specs))
+
+app.get("/loggerTest", (req, res) => {
+    req.logger.debug("nivel debug");
+    req.logger.http("nivel http");
+    req.logger.info("nivel info");
+    req.logger.warn("nivel warn");
+    req.logger.error("nivel error");
+    req.logger.fatal("nivel fatal");
+    res.send("Probando Niveles")
+});
 
 const server = app.listen(8080, () => {
     console.log(`Servidor Inicializado en el Puerto ${PORT}`)

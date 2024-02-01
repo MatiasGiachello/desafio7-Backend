@@ -183,7 +183,22 @@ nav ul li:not(.profileNav):hover::after {
     box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px;
 }
 
+.passwordContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.passwordContainer a {
+    font-size: 0.9rem;
+    color: #5b5b5b;
+    font-weight: 600;
+    margin-bottom: 5px;
+    text-decoration: none;
+}
+
 .formContainer h2 {
+    text-align: center;
     color: #272727;
     font-size: 2rem;
 }
@@ -191,6 +206,10 @@ nav ul li:not(.profileNav):hover::after {
 .accessForm p {
     font-size: 1rem;
     color: #373737;
+}
+
+.infoPassword {
+    margin-bottom: 20px;
 }
 
 .accessForm p a {
@@ -416,6 +435,10 @@ nav ul li:not(.profileNav):hover::after {
     .formContainer .accessForm {
         width: 90%;
         margin: 100px 0 50px 0;
+    }
+
+    .infoPassword {
+        margin-bottom: 15px;
     }
 
     .socialBtnLogin {

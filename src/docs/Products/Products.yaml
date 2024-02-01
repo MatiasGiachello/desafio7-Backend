@@ -1,0 +1,152 @@
+paths:
+  /api/products:
+    get:
+      summary: Obtiene los Productos
+      tags:
+        - Products
+      responses:
+        "200":
+          description: Devuelve los Productos
+
+    post:
+      summary: Agrega un nuevo producto
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Título del Producto
+                description:
+                  type: string
+                  description: Descripción del Producto
+                price:
+                  type: number
+                  description: Precio
+                status:
+                  type: boolean
+                  description: True o False
+                category:
+                  type: string
+                  description: Categoría del Producto
+                code:
+                  type: string
+                  description: Código único del Producto
+                stock:
+                  type: integer
+                  description: Stock
+              required:
+                - title
+                - description
+                - price
+                - category
+                - code
+                - stock
+          example:
+            title: Cinturón
+            description: Cinturón Artesanal de Cuero
+            price: 2500
+            status: true
+            category: Cinturones
+            code: AAA000
+            stock: 25
+      responses:
+        "200":
+          description: Producto agregado exitosamente
+        "400":
+          description: Error en la solicitud
+
+  /api/products/{pid}:
+    get:
+      summary: Obtiene el Producto a partir de su ID
+      tags:
+        - Products
+      parameters:
+        - name: pid
+          in: path
+          required: true
+          description: ID del Producto a buscar
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Devuelve el Producto
+
+    /api/products/{pid}:
+    delete:
+      summary: Elimina el Producto a partir de su ID
+      tags:
+        - Products
+      parameters:
+        - name: pid
+          in: path
+          required: true
+          description: ID del Producto a Eliminar
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Devuelve el Producto
+
+    put:
+      summary: Modifica el Producto a partir de su ID
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: Título del Producto
+                description:
+                  type: string
+                  description: Descripción del Producto
+                price:
+                  type: number
+                  description: Precio
+                status:
+                  type: boolean
+                  description: True o False
+                category:
+                  type: string
+                  description: Categoría del Producto
+                code:
+                  type: string
+                  description: Código único del Producto
+                stock:
+                  type: integer
+                  description: Stock
+              required:
+                - title
+                - description
+                - price
+                - category
+                - code
+                - stock
+          example:
+            title: Cinturón
+            description: Cinturón Artesanal de Cuero
+            price: 2500
+            status: true
+            category: Cinturones
+            code: AAA000
+            stock: 25
+      parameters:
+        - name: pid
+          in: path
+          required: true
+          description: ID del Producto a Modificar
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Devuelve el Producto

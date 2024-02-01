@@ -1,0 +1,219 @@
+paths:
+  /api/carts:
+    get:
+      summary: Obtiene los Productos del Carrito
+      tags:
+        - Carts
+      responses:
+        "200":
+          description: Devuelve los Productos del Carrito
+
+    post:
+      summary: Agrega un nuevo producto a un carrito
+      tags:
+        - Carts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                _id:
+                  type: string
+                  description: Id del Producto
+                quantity:
+                  type: number
+                  description: Cantidad de producto
+              required:
+                - _id
+                - quantity
+            example:
+              _id: 655d44382deddbccaa3d0575
+              quantity: 2
+      responses:
+        "200":
+          description: Producto agregado exitosamente
+        "400":
+          description: Error en la solicitud
+
+  /api/carts/{cid}:
+    get:
+      summary: Obtiene el Carrito a partir de su ID
+      tags:
+        - Carts
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          description: ID del Producto a buscar
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Devuelve el Producto
+
+    delete:
+      summary: Vacia el Carrito
+      tags:
+        - Carts
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          description: ID del Carrito a Eliminar
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Devuelve el Producto
+
+    put:
+      summary: Modifica el Carrito a partir de su ID
+      tags:
+        - Carts
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          description: ID del Carrito a Modificar
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                products:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        description: ID del Producto
+                      quantity:
+                        type: integer
+                        description: Cantidad del Producto
+                  minItems: 1
+            example:
+              products:
+                - _id: "64f24671b788d50b3321469b"
+                  quantity: 20
+      responses:
+        "200":
+          description: Devuelve el Carrito Modificado
+
+  /api/carts/{cid}/products/{pid}:
+    put:
+      summary: Modifica la cantidad de un producto en un carrito
+      tags:
+        - Carts
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          description: ID del Carrito
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          description: ID del Producto en el Carrito
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: number
+                  description: Nueva cantidad del producto
+            example:
+              quantity: 15
+      responses:
+        "200":
+          description: Cantidad de producto modificada exitosamente
+        "400":
+          description: Error en la solicitud
+
+    delete:
+      summary: Elimina un producto del carrito
+      tags:
+        - Carts
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          description: ID del Carrito
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          description: ID del Producto en el Carrito
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Producto eliminado exitosamente
+        "404":
+          description: Producto no encontrado en el carrito
+
+    post:
+      summary: Agrega un producto al carrito
+      tags:
+        - Carts
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          description: ID del Carrito
+          schema:
+            type: string
+        - name: pid
+          in: path
+          required: true
+          description: ID del Producto
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  description: Cantidad del Producto a agregar
+            example:
+              quantity: 2
+      responses:
+        "200":
+          description: Producto agregado al carrito exitosamente
+        "404":
+          description: Producto o Carrito no encontrado
+
+  /api/carts/{cid}/purchase:
+    post:
+      summary: Crea un ticket al comprar los productos del carrito
+      tags:
+        - Carts
+      parameters:
+        - name: cid
+          in: path
+          required: true
+          description: ID del Carrito
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket de compra generado exitosamente
+        "404":
+          description: Carrito no encontrado

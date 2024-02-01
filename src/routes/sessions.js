@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { userModel } from "../dao/models/user.js";
-import { createHash, isValidPassword } from "../utils.js";
 import passport from "passport";
+import { addLogger } from "../utils/logger.js"
+import { sendRecoveryPass } from "../utils/email.js";
+import { generateEmailToken, verifyEmailToken, createHash, isValidPassword } from "../utils.js";
 
 const router = Router();
 
@@ -37,7 +39,7 @@ router.post('/register', passport.authenticate('register', { failureRedirect: '/
     res.send({ status: "success", message: "Usuario Registrado" })
 })
 router.get('/failregister', (req, res) => {
-    console.log("Error al Registrarse")
+    req.logger.warn("Error al Registrarse")
     res.send({ status: "error", message: "Error al registrar" })
 })
 
@@ -66,7 +68,7 @@ router.get('/googlecallback', passport.authenticate('google', { failureRedirect:
 router.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
-            console.error("Error al cerrar sesión:", err);
+            req.logger.warn(`Error al cerrar sesión ${err}`)
             res.status(500).send({ status: "error", error: "Error al cerrar sesión" });
         } else {
             res.redirect('/login');
@@ -82,5 +84,52 @@ router.get('/current', (req, res) => {
     }
 })
 
+
+// PROBANDO RECUPERAR CONTRASEÑA
+
+router.post("/forgot-password", async (req, res) => {
+    try {
+        const { email } = req.body;
+        //verificamos que el usuario exista
+        const user = await userModel.findOne({ email: email });
+        if (!user) {
+            return res.send(`<div>Error, <a href="/forgot-password">Intente de nuevo</a></div>`);
+        }
+        //si el usuario existe, generamos el token del enlace
+        const token = generateEmailToken(email, 60 * 60);
+        await sendRecoveryPass(email, token);
+        res.send("se envio un correo a su cuenta para restablecer la contraseña, regresar <a href='/login'>al login</a>");
+    } catch (error) {
+        console.log(error)
+        res.send(`<div>Error, <a href="/forgot-password">Intente de nuevo</a></div>`)
+    }
+});
+
+router.post("/reset-password", async (req, res) => {
+    try {
+        const token = req.query.token;
+        const { email, newPassword } = req.body;
+        //validamos el token
+        const validEmail = verifyEmailToken(token);
+        if (!validEmail) {
+            return res.send(`El enlace ya no es valido, genere un nuevo enlace para recuperar la contraseña <a href="/forgot-password" >Recuperar contraseña</a>`)
+        }
+        const user = await userModel.findOne({ email: email });
+        if (!user) {
+            return res.send("El usuario no esta registrado")
+        }
+        if (isValidPassword(user, newPassword)) {
+            return res.send("No puedes usar la misma contraseña");
+        }
+        const userData = {
+            ...user._doc,
+            password: createHash(newPassword)
+        }
+        const userUpdate = await userModel.findOneAndUpdate({ email: email }, userData);
+        res.redirect('/login');
+    } catch (error) {
+        res.send(error.message);
+    }
+});
 
 export default router

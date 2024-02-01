@@ -6,6 +6,11 @@ import { ticketsModel } from "../dao/models/tickets.js"
 import { v4 as uuidv4 } from 'uuid';
 import { checkRole } from "../middlewares/auth.js"
 
+import CustomError from '../services/errors/CustomError.js'
+import EErrors from "../services/errors/enums.js"
+import { addCartErrorInfo, addProdInCartErrorInfo } from "../services/errors/info.js"
+import { addLogger } from "../utils/logger.js"
+
 const cManager = new CartManager()
 const pManager = new ProductManager()
 
@@ -22,9 +27,17 @@ router.get("/:cid", async (req, res) => {
 });
 
 
-router.post('/', checkRole("user"), async (req, res) => {
+router.post('/', checkRole(["user", "premium"]), async (req, res) => {
     try {
         const obj = req.body;
+        if (!obj) {
+            CustomError.createError({
+                name: "Error al Crear el Carrito",
+                cause: addCartErrorInfo({ obj }),
+                message: "Se ha encontrado un error al crear el Carrito",
+                code: EErrors.INVALID_TYPES_ERROR
+            })
+        }
         if (!Array.isArray(obj)) {
             return res.status(400).send('Invalid request: products must be an array');
         }
@@ -33,6 +46,9 @@ router.post('/', checkRole("user"), async (req, res) => {
 
         for (const product of obj) {
             const checkId = await pManager.getProductById(product._id);
+            if (checkId.owner == req.session.user.email) {
+                return res.send(`No podes agregar tus propios productos al Carrito`);
+            }
             if (checkId === `El producto con el ID: ${product._id} no fue encontrado`) {
                 return res.status(404).send(`Product with id ${product._id} not found`);
             }
@@ -42,7 +58,7 @@ router.post('/', checkRole("user"), async (req, res) => {
         res.status(200).send(cart);
 
     } catch (err) {
-        console.log(err);
+        req.logger.error(err);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -52,6 +68,14 @@ router.post("/:cid/products/:pid", checkRole("user"), async (req, res) => {
     const { quantity } = req.body;
 
     try {
+        if (!cid || !pid || !quantity) {
+            CustomError.createError({
+                name: "Error al Agregar el Producto en el Carrito",
+                cause: addProdInCartErrorInfo({ cid, pid, quantity }),
+                message: "Se ha encontrado un agregar el Producto el Carrito",
+                code: EErrors.INVALID_TYPES_ERROR
+            })
+        }
         const checkIdProduct = await pManager.getProductById(pid);
         if (!checkIdProduct) {
             return res.status(404).send({ message: `Product with ID: ${pid} not found` });
@@ -63,13 +87,13 @@ router.post("/:cid/products/:pid", checkRole("user"), async (req, res) => {
         }
 
         const result = await cManager.addProductInCart(cid, { _id: pid, quantity: quantity });
-        console.log(result);
+        req.logger.info(result);
         return res.status(200).send({
             message: `Product with ID: ${pid} added to cart with ID: ${cid}`,
             cart: result,
         });
     } catch (error) {
-        console.error("Error occurred:", error);
+        req.logger.error(error);
         return res.status(500).send({ message: "An error occurred while processing the request" });
     }
 });
@@ -95,7 +119,7 @@ router.put('/:cid', async (req, res) => {
         const cart = await cManager.updateOneProduct(cid, products);
         return res.status(200).send({ status: 'success', payload: cart });
     } catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ status: 'error', message: 'An error occurred while processing the request' });
     }
 });
@@ -118,7 +142,7 @@ router.put('/:cid/products/:pid', async (req, res) => {
         return res.status(200).send({ status: 'success', message: `Cantidad del Producto actualizado a ${quantity}` });
     }
     catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ status: 'error', message: 'An error occurred while processing the request' });
 
     }
@@ -149,7 +173,7 @@ router.delete('/:cid/products/:pid', async (req, res) => {
 
         return res.status(200).send({ status: 'success', message: `Deleted product with ID: ${pid}`, cart: updatedCart });
     } catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ status: 'error', message: 'An error occurred while processing the request' });
     }
 });
@@ -178,7 +202,7 @@ router.delete('/:cid', async (req, res) => {
             cart: cart,
         });
     } catch (error) {
-        console.log(error);
+        req.logger.error(error);
         return res.status(500).send({ message: 'An error occurred while processing the request' });
     }
 });
