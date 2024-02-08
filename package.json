@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon ./src/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "testmocha": "mocha ./test/Users.test.js",
+    "testchai": "mocha ./test/Products.test.js",
+    "testsuper": "mocha ./test/Carts.test.js"
   },
   "keywords": [],
   "author": "",

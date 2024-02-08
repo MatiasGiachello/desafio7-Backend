@@ -1,0 +1,30 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/img/favicon/favicon-16x16.png">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <script defer src="/js/main.js"></script>
+</head>
+
+<body {{#if isHomePage}}id="home-page" {{/if}}></body>
+<header id="header" {{#unless isHomePage}}class="scrollNav" {{/unless}}>
+    <a href="/"><img src="/img/lansLogoClaro.png" alt="" /></a>
+    <nav id="nav">
+        <ul>
+            <li><a href="/">Inicio</a></li>
+            <li><a href="/products">Productos</a></li>
+            <li><a href="#">Contacto</a></li>
+            <li class="profileNav"><a href="/profile"><i class="fas fa-user"></i></a></li>
+        </ul>
+    </nav>
+    <i id="btn-menu" class="fas fa-bars btnMenu"></i>
+</header>
+{{{body}}}
+</body>
+<script src="https://kit.fontawesome.com/fc72539189.js" crossorigin="anonymous"></script>
+
+</html>
